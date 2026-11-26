@@ -19,9 +19,8 @@ actions:
     runas: currentUserElevated
     
 
-  # Disable Memory Compression
-  - !powerShell: 
-    command: 'Disable-MMAgent -mc'
+  # Keep Windows memory compression at its OS-managed default.
+  # Disabling it can increase paging and reduce responsiveness on low-RAM systems.
 
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Services\Pending\7971f918-a847-4430-9279-4a52d1efe18d', value: 'RegisterWithAU', type: REG_DWORD, data: '0'}
 

@@ -163,6 +163,20 @@ actions:
     data: '0'
     option: 'configure-te'
 
+  # === Keep the modern Windows 11 visual effects enabled by default
+  - !registryValue:
+    path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+    value: 'EnableTransparency'
+    type: REG_DWORD
+    data: '1'
+    option: '!configure-te'
+  - !registryValue:
+    path: 'HKCU\Control Panel\Desktop\WindowMetrics'
+    value: 'MinAnimate'
+    type: REG_SZ
+    data: '1'
+    option: '!configure-te'
+
   # ======> Start
   # === Show suggestions occasionally in Start - Off
   - !registryValue: {path: 'HKCU\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager', value: 'SubscribedContent-338388Enabled', type: REG_DWORD, data: '0'}
