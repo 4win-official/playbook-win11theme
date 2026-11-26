@@ -1,101 +1,174 @@
+[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("Desktop", "LockScreen")]
+    [ValidateSet('Desktop', 'LockScreen')]
     [string]$Mode,
 
     [Parameter(Mandatory = $true)]
     [string]$ImagePath
 )
 
-function Set-DesktopWallpaper {
-    param(
-        [string]$imagePath
-    )
+$ErrorActionPreference = 'Stop'
 
-    if (-not (Test-Path $imagePath)) {
-        Write-Error "Image path does not exist: $imagePath"
-        return
+function Resolve-ImageFile {
+    param ([Parameter(Mandatory = $true)][string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path) -or
+        -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Image file was not found: $Path"
     }
 
-    Get-ChildItem -Path "Registry::HKU" | ForEach-Object {
-        $userKey = $_.Name
-        [microsoft.win32.registry]::SetValue("$userKey\Control Panel\Desktop", "WallPaper", $imagePath, [Microsoft.Win32.RegistryValueKind]::String)
-    }
-    
-    # https://gist.github.com/s7ephen/714023?permalink_comment_id=3611772#gistcomment-3611772
-    $setwallpapersrc = @"
-    using System.Runtime.InteropServices;
-
-    public class DesktopWallpaper
-    {
-      public const int SetDesktopWallpaper = 20;
-      public const int UpdateIniFile = 0x01;
-      public const int SendWinIniChange = 0x02;
-      [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-      private static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
-      public static void SetWallpaper(string path)
-      {
-        SystemParametersInfo(SetDesktopWallpaper, 0, path, UpdateIniFile |  SendWinIniChange);
-      }
-    }
-"@
-    if (-not ([System.Management.Automation.PSTypeName]'DesktopWallpaper').Type) {
-        Add-Type -TypeDefinition $setwallpapersrc
-    }
-
-    [DesktopWallpaper]::SetWallpaper($imagePath)
-
+    return [System.IO.Path]::GetFullPath((Resolve-Path -LiteralPath $Path).Path)
 }
 
+function Get-LoadedUserSid {
+    $profileList = 'Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+
+    foreach ($hive in @(Get-ChildItem -LiteralPath 'Registry::HKEY_USERS' -ErrorAction Stop)) {
+        $sid = $hive.PSChildName
+        if ($sid -notmatch '^S-\d-\d+-(\d+-)+\d+$' -or $sid -match '^S-1-5-(18|19|20)$') {
+            continue
+        }
+
+        $profileKey = Join-Path $profileList $sid
+        if (-not (Test-Path -LiteralPath $profileKey)) {
+            continue
+        }
+
+        try {
+            $profile = Get-ItemProperty -LiteralPath $profileKey -Name 'ProfileImagePath' -ErrorAction Stop
+            if (-not [string]::IsNullOrWhiteSpace([string]$profile.ProfileImagePath)) {
+                $hive
+            }
+        }
+        catch {
+            Write-Warning "Could not validate loaded user SID '$sid': $($_.Exception.Message)"
+        }
+    }
+}
+
+function Set-DesktopWallpaper {
+    param ([Parameter(Mandatory = $true)][string]$Path)
+
+    foreach ($hive in @(Get-LoadedUserSid)) {
+        $userKey = "HKEY_USERS\$($hive.PSChildName)\Control Panel\Desktop"
+        try {
+            [Microsoft.Win32.Registry]::SetValue(
+                $userKey, 'Wallpaper', $Path,
+                [Microsoft.Win32.RegistryValueKind]::String
+            )
+        }
+        catch {
+            Write-Warning "Could not update desktop wallpaper for SID '$($hive.PSChildName)': $($_.Exception.Message)"
+        }
+    }
+
+    $setWallpaperSource = @"
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+
+public static class DesktopWallpaper {
+    private const int SPI_SETDESKWALLPAPER = 20;
+    private const int SPIF_UPDATEINIFILE = 0x01;
+    private const int SPIF_SENDWININICHANGE = 0x02;
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool SystemParametersInfo(int action, int parameter, string path, int flags);
+
+    public static void SetWallpaper(string path) {
+        if (!SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, path, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)) {
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+    }
+}
+"@
+
+    if (-not ([System.Management.Automation.PSTypeName]'DesktopWallpaper').Type) {
+        Add-Type -TypeDefinition $setWallpaperSource -ErrorAction Stop
+    }
+
+    [DesktopWallpaper]::SetWallpaper($Path)
+    Write-Host "Desktop wallpaper applied: $Path"
+}
 
 function Set-LockScreenWallpaper {
-    param(
-        [string]$imagePath
-    )
+    param ([Parameter(Mandatory = $true)][string]$Path)
 
-    if (!(Test-Path $imagePath)) {
-        Write-Error "Image path does not exist: $imagePath"
-        return
+    $temporaryImagePath = $null
+    try {
+        $directory = Split-Path -Parent $Path
+        $extension = [System.IO.Path]::GetExtension($Path)
+        $temporaryImagePath = Join-Path $directory ('{0}{1}' -f ([guid]::NewGuid().ToString(), $extension))
+        Copy-Item -LiteralPath $Path -Destination $temporaryImagePath -Force -ErrorAction Stop
+
+        Add-Type -AssemblyName System.Runtime.WindowsRuntime -ErrorAction Stop
+        [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
+        [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
+
+        # Do not wrap these in @(...): PowerShell 5.1 otherwise keeps a
+        # one-element object[] and MakeGenericMethod would fail.
+        $asTaskGeneric = [System.WindowsRuntimeSystemExtensions].GetMethods() |
+            Where-Object {
+                $_.Name -eq 'AsTask' -and $_.IsGenericMethod -and
+                $_.GetParameters().Count -eq 1 -and
+                $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
+            } | Select-Object -First 1
+        $asTaskAction = [System.WindowsRuntimeSystemExtensions].GetMethods() |
+            Where-Object {
+                $_.Name -eq 'AsTask' -and -not $_.IsGenericMethod -and
+                $_.GetParameters().Count -eq 1
+            } | Select-Object -First 1
+
+        if ($null -eq $asTaskGeneric -or $null -eq $asTaskAction) {
+            throw 'Required Windows Runtime AsTask methods are unavailable.'
+        }
+
+        $awaitResult = {
+            param($operation, $resultType)
+            $method = $asTaskGeneric.MakeGenericMethod($resultType)
+            $task = $method.Invoke($null, @($operation))
+            $task.Wait(-1) | Out-Null
+            $task.Result
+        }
+        $awaitAction = {
+            param($operation)
+            $task = $asTaskAction.Invoke($null, @($operation))
+            $task.Wait(-1) | Out-Null
+        }
+
+        $image = & $awaitResult ([Windows.Storage.StorageFile]::GetFileFromPathAsync($temporaryImagePath)) ([Windows.Storage.StorageFile])
+        & $awaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($image))
+        Write-Host "Lock screen wallpaper applied: $Path"
+    }
+    catch {
+        Write-Warning "Windows Runtime Lock Screen API could not apply the image: $($_.Exception.Message)"
+    }
+    finally {
+        if ($temporaryImagePath -and (Test-Path -LiteralPath $temporaryImagePath -PathType Leaf)) {
+            Remove-Item -LiteralPath $temporaryImagePath -Force -ErrorAction SilentlyContinue
+        }
     }
 
-    # https://superuser.com/a/1343640
-    # License: https://creativecommons.org/licenses/by-sa/4.0/
-    $newImagePath = [System.IO.Path]::GetDirectoryName($imagePath) + '\' + (New-Guid).Guid + [System.IO.Path]::GetExtension($imagePath)
-    Copy-Item $imagePath $newImagePath
-    [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
-    Add-Type -AssemblyName System.Runtime.WindowsRuntime
-    $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]
-    Function Await($WinRtTask, $ResultType) {
-        $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
-        $netTask = $asTask.Invoke($null, @($WinRtTask))
-        $netTask.Wait(-1) | Out-Null
-        $netTask.Result
+    try {
+        [Microsoft.Win32.Registry]::SetValue(
+            'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Personalization',
+            'LockScreenImage', $Path,
+            [Microsoft.Win32.RegistryValueKind]::String
+        )
     }
-    Function AwaitAction($WinRtAction) {
-        $asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and !$_.IsGenericMethod })[0]
-        $netTask = $asTask.Invoke($null, @($WinRtAction))
-        $netTask.Wait(-1) | Out-Null
+    catch {
+        Write-Warning "Could not set the Lock Screen policy value: $($_.Exception.Message)"
     }
-    [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
-    $image = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($newImagePath)) ([Windows.Storage.StorageFile])
-    AwaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($image))
-    Remove-Item $newImagePath -Force
-
-    # Use policy to set the lock screen image (works only for Enterprise editions)
-    [microsoft.win32.registry]::SetValue(
-        "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Personalization",
-        "LockScreenImage",
-        $imagePath,
-        [Microsoft.Win32.RegistryValueKind]::String
-    )
 }
 
-$path = Get-ChildItem $ImagePath -Force | Select-Object -ExpandProperty FullName
-switch ($Mode) {
-    "Desktop" {
-        Set-DesktopWallpaper -ImagePath $path
+try {
+    $resolvedImagePath = Resolve-ImageFile -Path $ImagePath
+    switch ($Mode) {
+        'Desktop' { Set-DesktopWallpaper -Path $resolvedImagePath }
+        'LockScreen' { Set-LockScreenWallpaper -Path $resolvedImagePath }
     }
-    "LockScreen" {
-        Set-LockScreenWallpaper -ImagePath $path
-    }
+}
+catch {
+    throw $_
 }

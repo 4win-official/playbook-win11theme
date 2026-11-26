@@ -87,23 +87,45 @@ actions:
     weight: 45
 
   - !powerShell:
-    command: 'Copy-Item -Path .\WALLPAPER.ps1 -Destination "$env:systemroot\Web\Wallpaper\MeetRevision" -Force'
+    command: |
+      $destination = Join-Path $env:SystemRoot 'Web\Wallpaper\MeetRevision'
+      if (-not (Test-Path -LiteralPath $destination -PathType Container)) {
+        New-Item -LiteralPath $destination -ItemType Directory -Force -ErrorAction Stop | Out-Null
+      }
+      Copy-Item -LiteralPath .\WALLPAPER.ps1 -Destination $destination -Force -ErrorAction Stop
+      if (-not (Test-Path -LiteralPath (Join-Path $destination 'WALLPAPER.ps1') -PathType Leaf)) {
+        throw 'WALLPAPER.ps1 was not copied to the system wallpaper directory.'
+      }
     exeDir: true
     option: "configure-wallpaper"
   
   - !powerShell:
-    command: 'Copy-Item -Path .\WallpaperStartup.cmd -Destination "$env:systemroot\Web\Wallpaper\MeetRevision" -Force'
+    command: |
+      $destination = Join-Path $env:SystemRoot 'Web\Wallpaper\MeetRevision'
+      Copy-Item -LiteralPath .\WallpaperStartup.cmd -Destination $destination -Force -ErrorAction Stop
+      Copy-Item -LiteralPath .\WallpaperStartup.ps1 -Destination $destination -Force -ErrorAction Stop
+      if (-not (Test-Path -LiteralPath (Join-Path $destination 'WallpaperStartup.cmd') -PathType Leaf) -or
+          -not (Test-Path -LiteralPath (Join-Path $destination 'WallpaperStartup.ps1') -PathType Leaf)) {
+        throw 'Wallpaper startup files were not copied to the system wallpaper directory.'
+      }
     exeDir: true
     option: "configure-wallpaper"
 
   # === Themes
 
   - !powerShell:
-    command: '.\\Set-Theme.ps1 -Path (Join-Path $env:SystemRoot "Resources\\Themes\\dark.theme")'
+    command: '.\\Set-Theme.ps1 -Path (Join-Path $env:SystemRoot "Resources\\Themes\\dark.theme") -SystemMode Dark -AppMode Dark'
     exeDir: true
     runas: currentUserElevated
     option: "!configure-wallpaper"
     options: ["configure-darkmode"]
+
+  - !powerShell:
+    command: '.\\Set-Theme.ps1 -Path (Join-Path $env:SystemRoot "Resources\\Themes\\aero.theme") -SystemMode Light -AppMode Light'
+    exeDir: true
+    runas: currentUserElevated
+    option: "!configure-wallpaper"
+    options: ["!configure-darkmode"]
 
   - !powerShell:
     command: ".\\Set-Theme.ps1 -New @{ WallpaperPath = (Join-Path $env:SystemRoot 'Web\\Wallpaper\\MeetRevision\\v2\\desktop.jpg'); ThemeExportPath = (Join-Path $env:SystemRoot 'Resources\\Themes\\revi.theme'); SystemMode = 'Light'; AppMode = 'Light' }"
@@ -132,7 +154,6 @@ actions:
     path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'
     value: 'RevisionWallpaperStartup'
     type: REG_SZ
-    oobe: only
     data: 'cmd /c "%SystemRoot%\Web\Wallpaper\MeetRevision\WallpaperStartup.cmd"'
     option: "configure-wallpaper"
     

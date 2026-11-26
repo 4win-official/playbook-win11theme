@@ -1,15 +1,9 @@
-<# :
-@echo off &pushd "%~dp0"
-@set batch_args=%*
-@set script_path=%~f0
-@powershell -NoProfile -ExecutionPolicy Bypass -Command "iex (cat -Raw '%~f0')"
-@exit /b %ERRORLEVEL%
-: #>
-
-$scriptPath = "$env:SystemRoot\Web\Wallpaper\MeetRevision\WALLPAPER.ps1"
-& $scriptPath -Mode Desktop -ImagePath "$env:SystemRoot\Web\Wallpaper\MeetRevision\v2\desktop.jpg"
-& $scriptPath -Mode LockScreen -ImagePath "$env:SystemRoot\Web\Wallpaper\MeetRevision\v2\lockscreen.jpg"
-
-# Not an ideal place
-# RARE Case, but on W10, when legacy Mail app is uninstalled, Outlook for Windows gets installed automatically
-Get-AppxPackage Microsoft.OutlookForWindows* | Remove-AppxPackage
+@echo off
+setlocal
+set "SCRIPT=%SystemRoot%\Web\Wallpaper\MeetRevision\WallpaperStartup.ps1"
+if not exist "%SCRIPT%" (
+    echo Wallpaper startup script was not found: "%SCRIPT%" 1>&2
+    exit /b 1
+)
+PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%SCRIPT%"
+exit /b %ERRORLEVEL%
