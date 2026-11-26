@@ -1,7 +1,7 @@
 ---
 title: Initialization
 description: Copies Revision folders/files, and configures some initial settings
-privilege: TrustedInstaller
+privilege: Admin
 actions:
   
   - !writeStatus: {status: "Initializing"}

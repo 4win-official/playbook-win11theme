@@ -33,6 +33,7 @@ For more detailed information, see our documentation [here](https://revi.cc/docs
 
 ReviOS Playbook currently supports ARM64 and AMD64 builds of the following Windows versions:
 
+- Windows 10 20H1–21H1 `19041`–`19043` (experimental)
 - Windows 10 21H2 `19044` (+ LTSC)
 - Windows 10 22H2 `19045`
 - Windows 11 23H2 `22631`
