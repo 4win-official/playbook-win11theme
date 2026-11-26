@@ -1,7 +1,7 @@
 ---
 title: Configure Deprovisioned Apps
 description: Prevents some UWP packages from installing after updating Windows
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   - !registryKey: {path: 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore\Deprovisioned\Microsoft.549981C3F5F10_8wekyb3d8bbwe', operation: add}

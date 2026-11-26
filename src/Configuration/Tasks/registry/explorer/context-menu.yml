@@ -1,7 +1,7 @@
 ---
 title: Configure Explorer -> Context Menu
 description: Configure the context menu in Windows Explorer
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # Enables the classic right click context menu in Explorer on Windows 11

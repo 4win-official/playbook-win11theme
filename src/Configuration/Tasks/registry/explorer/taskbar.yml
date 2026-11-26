@@ -1,7 +1,7 @@
 ---
 title: Configure Explorer -> Taskbar
 description: Configure Taskbar
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Modern taskbar baseline

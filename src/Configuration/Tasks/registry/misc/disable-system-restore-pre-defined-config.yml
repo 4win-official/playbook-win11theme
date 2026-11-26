@@ -1,7 +1,7 @@
 ---
 title: disable-system-restore-pre-defined-config
 description: disable-system-restore-pre-defined-config
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
     # === Disable System Restore pre-defined Config.

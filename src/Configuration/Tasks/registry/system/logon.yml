@@ -1,7 +1,7 @@
 ---
 title: Configure System -> Logon
 description: Configure logon settings
-privilege: TrustedInstaller
+privilege: Admin
 actions:
   
   # === Show first sign-in animation - Disabled

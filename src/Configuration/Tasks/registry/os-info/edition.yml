@@ -1,7 +1,7 @@
 ---
 title: revision-static-edition
 description: revision-static-edition
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   - !registryValue: {path: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion', value: 'EditionSubManufacturer', type: REG_SZ, data: 'MeetRevision'}

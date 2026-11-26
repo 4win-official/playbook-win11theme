@@ -1,7 +1,7 @@
 ---
 title: Bypass requirements
 description: Bypass requirements for Windows 11 installation, most of them are only for boot.wim
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Bypass requirements

@@ -1,7 +1,7 @@
 ---
 title: Configure Security
 description: Configure security settings
-privilege: TrustedInstaller
+privilege: Admin
 actions:
   
   # === Hide the Account Protection page in Defender

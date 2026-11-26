@@ -1,7 +1,7 @@
 ---
 title: Configure Explorer -> Start Menu 
 description: Configure Start Menu
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Pin items to the Start Menu

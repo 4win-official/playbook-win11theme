@@ -1,7 +1,7 @@
 ---
 title: Configure Explorer
 description: Configure general settings for Explorer
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === perf: Disables Automatic Folder Type Discovery

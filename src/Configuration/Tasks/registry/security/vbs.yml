@@ -1,7 +1,7 @@
 ---
 title: Configure Security -> Virtualization Based Security
 description: Configure VBS
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # Disabling VBS improves gaming performance

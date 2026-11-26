@@ -1,7 +1,7 @@
 ---
 title: Configure Privacy -> Application Compatibility
 description: Configure Application Compatibility
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Turn off Application Compatibility Engine - Enabled

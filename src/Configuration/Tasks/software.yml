@@ -1,7 +1,7 @@
 ---
 title: Software
 description: Installs preferred software 
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # https://github.com/meetrevision/playbook/issues/81

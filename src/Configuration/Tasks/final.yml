@@ -1,7 +1,7 @@
 ---
 title: Configuration
 description: Applies some Revision configurations
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   - !writeStatus: {status: "Optimizing NTFS"}

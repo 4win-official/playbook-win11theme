@@ -1,7 +1,7 @@
 ---
 title: Configure Privacy -> Customer Experience Improvement Program (CEIP)
 description: Configure CEIP
-privilege: TrustedInstaller
+privilege: Admin
 actions:
  
   # ------> https://admx.help/?Category=Windows_11_2022&Policy=Microsoft.Policies.InternetCommunicationManagement::CEIPEnable

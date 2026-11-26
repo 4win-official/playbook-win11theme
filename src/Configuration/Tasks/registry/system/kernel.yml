@@ -1,7 +1,7 @@
 ---
 title: configure-kernel
 description: configure-kernel
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Enable TSX

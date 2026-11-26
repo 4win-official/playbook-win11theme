@@ -4,19 +4,6 @@ description: Custom Revision configuration
 privilege: Admin
 actions:
 
-  # TrustedInstaller must be startable before any child task that uses its node.
-  # This is important on optimized Windows installations where the service is disabled.
-  - !powerShell:
-    command: >-
-      $service = Get-Service -Name 'TrustedInstaller' -ErrorAction Stop;
-      if ($service.StartType -eq 'Disabled') {
-        Set-Service -Name 'TrustedInstaller' -StartupType Manual -ErrorAction Stop
-      };
-      if ($service.Status -ne 'Running') {
-        Start-Service -Name 'TrustedInstaller' -ErrorAction Stop
-      }
-    errorAction: Halt
-
   # OS Info
   - !task: {path: 'Tasks\registry\os-info\edition.yml'}
   - !task: {path: 'Tasks\registry\os-info\oem-info.yml'}

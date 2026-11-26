@@ -1,7 +1,7 @@
 ---
 title: Configure Updates -> Microsoft Store
 description: Configure Update and Privacy settings for Microsoft Store
-privilege: TrustedInstaller
+privilege: Admin
 actions: 
 
   # === Turn off Automatic Download and Install of updates - Disabled

@@ -1,7 +1,7 @@
 ---
 title: Configure Explorer -> Search
 description: Configure Search
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === (perf) Respect Power Settings when Indexing - Enabled (Win11 only)

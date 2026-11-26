@@ -1,7 +1,7 @@
 ---
 title: Rollback Tweaks
 description: Rollback tweaks for those who are applying from previous versions of the playbook
-privilege: TrustedInstaller
+privilege: Admin
 onUpgrade: true
 actions:
 

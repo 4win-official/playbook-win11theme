@@ -1,7 +1,7 @@
 ---
 title: Restore classic Windows Photo Viewer
 description: Restore classic Windows Photo Viewer
-privilege: TrustedInstaller
+privilege: Admin
 option: 'remove-appx-photos'
 actions:
 

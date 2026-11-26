@@ -1,7 +1,7 @@
 ---
 title: configure-oobe
 description: configure-oobe
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
 

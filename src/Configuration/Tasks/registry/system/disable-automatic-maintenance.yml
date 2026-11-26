@@ -1,7 +1,7 @@
 ---
 title: disable-automatic-maintenance
 description: disable-automatic-maintenance
-privilege: TrustedInstaller
+privilege: Admin
 option: disable-automatic-maintenance
 actions:
 

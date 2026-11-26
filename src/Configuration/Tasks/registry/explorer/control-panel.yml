@@ -1,7 +1,7 @@
 ---
 title: Configure Control Panel
 description: Configure Control Panel
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Disable Wallpaper JPEG (.jpg) image Compression.

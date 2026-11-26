@@ -1,7 +1,7 @@
 ---
 title: configure-power-control
 description: configure-power-control
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === Disable Hibernate via revitool

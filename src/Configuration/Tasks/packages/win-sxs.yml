@@ -1,7 +1,7 @@
 ---
 title: Packages
 description: Removes system (WinSxS) packages
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # NOTE: !systemPackage: method of removing system packages is now deprecated and not recommended by Revision, as it is one of the main cause of #49

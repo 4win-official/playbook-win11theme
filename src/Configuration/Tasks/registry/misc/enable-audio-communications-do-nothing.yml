@@ -1,7 +1,7 @@
 ---
 title: enable-audio-communications-do-nothing
 description: enable-audio-communications-do-nothing
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
     # === Set Sound -> Communications -> "When Windows detects communications activity" to "Do Nothing".

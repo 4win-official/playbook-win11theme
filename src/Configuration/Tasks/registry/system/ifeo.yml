@@ -1,7 +1,7 @@
 ---
 title: configure-ifeo
 description: configure-ifeo
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
   # === CEIP

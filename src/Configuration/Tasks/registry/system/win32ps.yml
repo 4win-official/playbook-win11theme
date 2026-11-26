@@ -1,7 +1,7 @@
 ---
 title: Configure System -> Win32PrioritySeparation
 description: Configure Win32PrioritySeparation
-privilege: TrustedInstaller
+privilege: Admin
 actions:
 
     # --- Quantum is the amount of time the Windows process scheduler allocates to a thread. There are two recommended values:
